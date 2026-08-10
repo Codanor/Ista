@@ -1,0 +1,25 @@
+id: meta-create-skill
+name: create-ista-skill
+description: Interactively scaffolds a new Ista skill -- asks for the fields skill.yaml needs, writes the directory structure, and validates it
+version: 0.1.0
+trigger:
+  keywords: [create ista skill, new ista skill, scaffold skill, ista skill new]
+  always_on: false
+scope: project
+priority: 0
+capabilities:
+  reads_files: true
+  writes_files: true
+  network: false
+  shell_exec: true
+  tools: [ista]
+  spawn_subagents: false
+  approval: required
+body: body.md
+attachments: []
+resources: []
+scripts: []
+systems:
+  claude:
+    enabled: true
+    overrides: {}

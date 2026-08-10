@@ -6,17 +6,13 @@
 
 <p align="center"><em>Write a skill once. Every agent gets it — natively, honestly.</em></p>
 
-Ista is a shared skill library for AI coding agents. Author the skill once, and Claude Code, Gemini CLI, Codex, and ChatGPT each get it in their own native format and permission mechanism — no shared-folder hack, no hand-copied files quietly drifting out of sync.
+Ista is a shared skill library for AI agents and providers. Author the skill once, everyone gets it in their native format and permission mechanism. No need for shared-folder hacks or hand-copied files which quietly drift out of sync.
 
-Named after the *Istari* (Tolkien's order of wizards, e.g. Gandalf) — an instructor/guide archetype, fitting for a tool that distributes procedural knowledge to agents.
+Named after the greatest mentor and secret guide **Gandalf**, member of the **Ista**ri.
 
 ## Why
 
-Two problems, and they're different.
-
-**Getting a skill in front of every agent.** Before Ista, you had two options: tell every model to ignore its own skill folder and read from one shared directory instead, or hand-copy the same skill into `.claude/skills/`, `.gemini/skills/`, `.codex/skills/`, and keep every copy in sync yourself. Neither holds up past a handful of skills. Write the skill once, run `ista sync`, and every agent finds it exactly where it already expects to look, in its own native format.
-
-**What each agent actually lets it do.** Claude Code, OpenAI Codex, Gemini CLI, ChatGPT Custom GPTs, and others have converged on that shared file format (a `SKILL.md` with YAML frontmatter, per the open Agent Skills standard) — but the **permission layer** around it hasn't converged at all:
+We already have the `Open Agent Skills standard`, which is great — but skills still live in folder formations like `/.claude` where only a specific model can read them. Additionally, there's no real agreement on how to handle permissions.
 
 | System | Permission model |
 |---|---|
@@ -25,7 +21,9 @@ Two problems, and they're different.
 | OpenAI Codex | No skill-scoped permissions at all — only session/sandbox-level config |
 | ChatGPT Custom GPT | No local file or API target — capability intent is advisory at best |
 
-Ista owns the *capability-intent* layer above the file format and compiles it down into each system's actual mechanism, **never claiming more enforcement than genuinely exists**. If a target can only advise about a capability, or can't express it at all, Ista says so at sync time instead of silently degrading.
+This is where **Ista** comes into play. Ista doesn't fight the native layouts of skill organization between different models, or enforce permissions where it's not supported. Instead, it provides one clean layer where you can register and organize skills, as well as grant them permissions.
+
+Ista compiles registered skills down into the native provider layouts. It also owns the *capability-intent* layer above the file format and compiles it down into each system's actual mechanism, **never claiming more enforcement than genuinely exists**. If a target can only advise about a capability, or can't express it at all, Ista says so at sync time instead of silently degrading.
 
 ## Install
 

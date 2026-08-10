@@ -29,16 +29,20 @@ Ista owns the *capability-intent* layer above the file format and compiles it do
 
 ## Install
 
-Not published to npm yet. Clone and link it locally:
-
 ```bash
-git clone <this repo>
-cd ista
-npm install
-npm link          # puts `ista` on your PATH, pointing at this checkout
+npm install -g ista
 ```
 
 Requires Node ≥ 22.6 — Ista runs its TypeScript source directly via Node's native type stripping, no build step.
+
+To work on Ista itself, clone and link it locally instead:
+
+```bash
+git clone https://github.com/Codanor/Ista.git
+cd Ista
+npm install
+npm link          # puts `ista` on your PATH, pointing at this checkout
+```
 
 ## Quick start
 
@@ -51,7 +55,11 @@ ista skill new code-review       # scaffolds .ista/skills/code-review/{skill.yam
 
 ista skill validate              # checks skill.yaml against the schema
 ista sync                        # compiles it to every system it's enabled for
+
+ista skill attach code-review checklist   # scaffold attachments/checklist.md, register it on the skill
 ```
+
+Attachments are content fragments — extra files a skill can pull in beyond `body.md`. `ista sync` appends each attached file's content onto the compiled body for every enabled system, so it shows up in the `.claude/`, `.gemini/`, `.codex/`, and `.chatgpt/` output alongside the main instructions.
 
 `ista sync` writes `.claude/skills/code-review/SKILL.md` (and `.gemini/`, `.codex/`, `.chatgpt/` for whichever systems are enabled), so opening the project in Claude Code makes the skill available immediately.
 

@@ -6,13 +6,37 @@
   "bin": {
     "ista": "./src/cli.ts"
   },
+  "files": [
+    "src",
+    "bootstrap-skills"
+  ],
   "engines": {
     "node": ">=22.6.0"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
-    "test": "node --test"
+    "test": "node --test",
+    "prepublishOnly": "npm run typecheck && npm test"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Codanor/Ista.git"
+  },
+  "homepage": "https://github.com/Codanor/Ista#readme",
+  "bugs": {
+    "url": "https://github.com/Codanor/Ista/issues"
+  },
+  "keywords": [
+    "cli",
+    "ai",
+    "skills",
+    "agent-skills",
+    "claude",
+    "gemini",
+    "codex",
+    "chatgpt"
+  ],
+  "author": "Codanor",
   "license": "MIT",
   "dependencies": {
     "@clack/prompts": "^1.7.0",

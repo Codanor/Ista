@@ -4,7 +4,7 @@
   "description": "Cross-platform AI skill management CLI",
   "type": "module",
   "bin": {
-    "ista": "./src/cli.ts"
+    "ista": "src/cli.ts"
   },
   "files": [
     "src",

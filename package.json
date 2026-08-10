@@ -1,5 +1,5 @@
 {
-  "name": "ista",
+  "name": "@codanor/ista",
   "version": "0.1.0",
   "description": "Cross-platform AI skill management CLI",
   "type": "module",

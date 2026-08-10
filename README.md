@@ -30,7 +30,7 @@ Ista owns the *capability-intent* layer above the file format and compiles it do
 ## Install
 
 ```bash
-npm install -g ista
+npm install -g @codanor/ista
 ```
 
 Requires Node ≥ 22.6 — Ista runs its TypeScript source directly via Node's native type stripping, no build step.

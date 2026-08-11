@@ -8,7 +8,7 @@ import type { ResolvedSkill } from "./compiler/types.ts";
 import { addToCategory, type CategoryEntry } from "./category.ts";
 import { generateSkillId } from "./id.ts";
 import { addLinkedBy } from "./linkRegistry.ts";
-import { parseSkillMeta, type Scope, type SkillMeta } from "./schema.ts";
+import { parseSkillMeta, type RefScope, type Scope, type SkillMeta } from "./schema.ts";
 import { resolveSkill, skillsDir, writeSkill } from "./store.ts";
 
 // What `ista update` (§9.5) recomputes to detect whether a fork has been
@@ -30,11 +30,12 @@ export function computeContentHash(
 export type ForkResult = { ok: true; meta: SkillMeta; dir: string } | { ok: false; error: string };
 
 export function forkSkill(
-  sourceScope: Scope,
+  sourceScope: RefScope,
   sourceDir: string,
   sourceMeta: SkillMeta,
   destRoot: string,
   destScope: Scope,
+  sourcePath?: string, // set when sourceScope === "path"
 ): ForkResult {
   const destDir = join(skillsDir(destRoot), sourceMeta.name);
   if (existsSync(destDir)) {
@@ -48,6 +49,7 @@ export function forkSkill(
     scope: destScope,
     forked_from: {
       scope: sourceScope,
+      path: sourcePath,
       id: sourceMeta.id,
       version: sourceMeta.version,
       content_hash: computeContentHash(resolved),
@@ -74,13 +76,14 @@ export function forkSkill(
 // source -- the same primitive §8 already uses for cross-scope refs.
 export function writeLink(
   sourceRoot: string,
-  sourceScope: Scope,
+  sourceScope: RefScope,
   sourceId: string,
   destRoot: string,
   destScope: Scope,
   category: string,
+  sourcePath?: string, // set when sourceScope === "path"
 ): void {
-  const entry: CategoryEntry = { ref: { scope: sourceScope, id: sourceId } };
+  const entry: CategoryEntry = { ref: { scope: sourceScope, path: sourcePath, id: sourceId } };
   addToCategory(destRoot, category, entry);
   addLinkedBy(sourceRoot, sourceId, { scope: destScope, path: destRoot });
 }

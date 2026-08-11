@@ -5,8 +5,21 @@
 // at a directory someone syncs by hand (or a shared drive) is a perfectly
 // real way to use it; Ista just doesn't own the transport yet.
 import { existsSync } from "node:fs";
-import type { IstaConfig, Scope, SkillMeta } from "./schema.ts";
+import type { IstaConfig, RefScope, Scope, SkillMeta } from "./schema.ts";
 import { ensureUserScope, findIstaRoot, findSkillInScope, istaDir, readConfig, userScopePath } from "./store.ts";
+
+// A resolved reference target: one of the three named scopes, or a literal
+// external project directory (scope "path"). `path` is set only in the
+// latter case -- the CLI escape hatch for linking/forking directly between
+// two unrelated project trees without a shared org mirror in between.
+export interface ScopeLocation {
+  scope: RefScope;
+  path?: string;
+}
+
+export function refLabel(ref: ScopeLocation): string {
+  return ref.scope === "path" ? ref.path! : ref.scope;
+}
 
 // project config wins over user config when both declare an org block.
 function orgConfigCandidates(cwd: string): string[] {
@@ -63,6 +76,14 @@ export function resolveScopeRoot(scope: Scope, cwd: string): string | null {
   if (scope === "project") return findIstaRoot(cwd);
   if (scope === "user") return ensureUserScope();
   return resolveOrgRoot(cwd);
+}
+
+// Like resolveScopeRoot, but also accepts scope "path" -- resolved directly
+// against the filesystem instead of cwd, and only valid if a .ista/ actually
+// lives there (same existence bar the three named scopes are held to).
+export function resolveRefRoot(ref: ScopeLocation, cwd: string): string | null {
+  if (ref.scope === "path") return ref.path && existsSync(istaDir(ref.path)) ? ref.path : null;
+  return resolveScopeRoot(ref.scope, cwd);
 }
 
 export function findSkillAcrossScopes(

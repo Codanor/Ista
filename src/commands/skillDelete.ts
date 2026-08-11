@@ -44,6 +44,15 @@ export async function runSkillDelete(
     if (convert) {
       let allConverted = true;
       for (const backlink of entry.linked_by) {
+        // A backlink's scope is always the linker's *own* real scope (project/
+        // user/org) at the time it linked -- "path" only ever tags the far end
+        // of a link, never the linker's own home, so this can't happen in
+        // practice. Guarded anyway since the schema now allows it structurally.
+        if (backlink.scope === "path") {
+          console.error(`Cannot convert link at ${backlink.path} to a fork -- invalid backlink scope "path".`);
+          allConverted = false;
+          continue;
+        }
         const result = forkSkill(scope, found.dir, found.meta, backlink.path, backlink.scope);
         if (!result.ok) {
           console.error(`Could not convert link at ${backlink.path}: ${result.error}`);

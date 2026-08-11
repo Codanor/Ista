@@ -5,11 +5,11 @@
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import yaml from "js-yaml";
 import { z } from "zod";
-import { ScopeSchema } from "./schema.ts";
+import { RefScopeSchema } from "./schema.ts";
 import { linkRegistryPath } from "./store.ts";
 
-const BacklinkSchema = z.object({ scope: ScopeSchema, path: z.string() });
-const ForkedBySchema = z.object({ scope: ScopeSchema, path: z.string(), id: z.string() });
+const BacklinkSchema = z.object({ scope: RefScopeSchema, path: z.string() });
+const ForkedBySchema = z.object({ scope: RefScopeSchema, path: z.string(), id: z.string() });
 const RegistryEntrySchema = z.object({
   linked_by: z.array(BacklinkSchema).default([]),
   forked_by: z.array(ForkedBySchema).default([]),

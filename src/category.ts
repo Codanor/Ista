@@ -6,10 +6,10 @@ import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 
 import { join } from "node:path";
 import yaml from "js-yaml";
 import { z } from "zod";
-import { ScopeSchema } from "./schema.ts";
+import { RefScopeSchema } from "./schema.ts";
 import { categoriesDir } from "./store.ts";
 
-const CategoryRefSchema = z.object({ ref: z.object({ scope: ScopeSchema, id: z.string() }) });
+const CategoryRefSchema = z.object({ ref: z.object({ scope: RefScopeSchema, path: z.string().optional(), id: z.string() }) });
 const CategoryEntrySchema = z.union([z.string(), CategoryRefSchema]);
 const CategoryIndexSchema = z.array(CategoryEntrySchema);
 
@@ -42,7 +42,7 @@ export function writeCategoryIndex(root: string, name: string, entries: Category
 
 function entryEquals(a: CategoryEntry, b: CategoryEntry): boolean {
   if (typeof a === "string" || typeof b === "string") return a === b;
-  return a.ref.scope === b.ref.scope && a.ref.id === b.ref.id;
+  return a.ref.scope === b.ref.scope && a.ref.id === b.ref.id && a.ref.path === b.ref.path;
 }
 
 export function addToCategory(root: string, name: string, entry: CategoryEntry): void {
@@ -54,13 +54,17 @@ export function addToCategory(root: string, name: string, entry: CategoryEntry):
 // Used by `ista skill delete --convert-to-forks` (§9.6): swap every ref
 // entry pointing at `oldRef` for a plain same-scope id, across every
 // category in this scope, now that a real local copy exists.
-export function replaceRefInAllCategories(root: string, oldRef: { scope: string; id: string }, newEntry: string): number {
+export function replaceRefInAllCategories(
+  root: string,
+  oldRef: { scope: string; id: string; path?: string },
+  newEntry: string,
+): number {
   let totalReplaced = 0;
   for (const name of listCategories(root)) {
     const entries = readCategoryIndex(root, name);
     let changedHere = false;
     const next = entries.map((e) => {
-      if (typeof e !== "string" && e.ref.scope === oldRef.scope && e.ref.id === oldRef.id) {
+      if (typeof e !== "string" && e.ref.scope === oldRef.scope && e.ref.id === oldRef.id && e.ref.path === oldRef.path) {
         changedHere = true;
         totalReplaced++;
         return newEntry;

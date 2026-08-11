@@ -1,5 +1,5 @@
 import { readCategoryIndex } from "../category.ts";
-import { currentScope, resolveScopeRoot } from "../scope.ts";
+import { currentScope, refLabel, resolveRefRoot } from "../scope.ts";
 import { findSkillInScope, listSkills } from "../store.ts";
 import type { SkillMeta } from "../schema.ts";
 
@@ -33,9 +33,10 @@ export function runSkillList(cwd: string, opts: { category?: string }): void {
       else console.log(`[missing] "${entry}"`);
       continue;
     }
-    const targetRoot = resolveScopeRoot(entry.ref.scope, cwd);
+    const targetRoot = resolveRefRoot(entry.ref, cwd);
     const found = targetRoot ? findSkillInScope(targetRoot, entry.ref.id) : null;
-    if (found) printSkill(found.meta, entry.ref.scope);
-    else console.log(`[unresolved] ${entry.ref.scope}:${entry.ref.id}`);
+    const label = refLabel(entry.ref);
+    if (found) printSkill(found.meta, label);
+    else console.log(`[unresolved] ${label}:${entry.ref.id}`);
   }
 }

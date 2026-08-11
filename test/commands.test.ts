@@ -54,7 +54,7 @@ test("ista link references a user-scope skill from project without copying", asy
   await withScopes((project, userHome) => {
     const meta = writeTestSkill(userHome, "code-review");
 
-    runLink(project, "code-review", "user", { category: "quality" });
+    runLink(project, "code-review", { scope: "user" }, { category: "quality" });
 
     assert.deepEqual(readCategoryIndex(project, "quality"), [{ ref: { scope: "user", id: meta.id } }]);
     assert.equal(listSkills(project).length, 0); // nothing copied into the project's own store
@@ -66,7 +66,7 @@ test("ista move relocates the skill and leaves a link back", async () => {
   await withScopes((project, userHome) => {
     const meta = writeTestSkill(project, "code-review");
 
-    runMove(project, "code-review", "user", { category: "quality" });
+    runMove(project, "code-review", { scope: "user" }, { category: "quality" });
 
     assert.equal(findSkillInScope(project, "code-review"), null);
     assert.ok(findSkillInScope(userHome, "code-review"));
@@ -80,7 +80,7 @@ test("ista fork copies content into the current scope with recorded lineage", as
   await withScopes((project, userHome) => {
     const meta = writeTestSkill(userHome, "code-review");
 
-    runFork(project, "code-review", "user");
+    runFork(project, "code-review", { scope: "user" });
 
     const forked = findSkillInScope(project, "code-review");
     assert.ok(forked);
@@ -110,12 +110,12 @@ test("ista skill new records the actual creation scope, not just a default", asy
 test("ista update fast-forwards an unmodified fork and requires --force for a diverged one", async () => {
   await withScopes(async (project, userHome) => {
     writeTestSkill(userHome, "code-review");
-    runFork(project, "code-review", "user");
+    runFork(project, "code-review", { scope: "user" });
     const fork = findSkillInScope(project, "code-review")!;
 
     // Truth changes; fork hasn't been touched -> fast-forward, no --force needed.
     writeFileSync(join(skillsDir(userHome), "code-review", "body.md"), "Updated body v2.\n", "utf8");
-    await runUpdate(project, "code-review", "user", ["project"], { force: false });
+    await runUpdate(project, "code-review", { scope: "user" }, [{ scope: "project" }], { force: false });
     assert.equal(readFileSync(join(fork.dir, "body.md"), "utf8"), "Updated body v2.\n");
 
     // Fork now diverges locally; truth changes again.
@@ -123,11 +123,11 @@ test("ista update fast-forwards an unmodified fork and requires --force for a di
     writeFileSync(join(skillsDir(userHome), "code-review", "body.md"), "Updated body v3.\n", "utf8");
 
     // Non-interactive (no TTY) + no --force -> refuses, local edit preserved.
-    await runUpdate(project, "code-review", "user", ["project"], { force: false });
+    await runUpdate(project, "code-review", { scope: "user" }, [{ scope: "project" }], { force: false });
     assert.equal(readFileSync(join(fork.dir, "body.md"), "utf8"), "Locally edited.\n");
 
     // --force applies over the local edit.
-    await runUpdate(project, "code-review", "user", ["project"], { force: true });
+    await runUpdate(project, "code-review", { scope: "user" }, [{ scope: "project" }], { force: true });
     assert.equal(readFileSync(join(fork.dir, "body.md"), "utf8"), "Updated body v3.\n");
   });
 });
@@ -143,7 +143,7 @@ test("ista skill delete deletes cleanly when nothing links to it", async () => {
 test("ista skill delete refuses when linked, and --force deletes leaving a dangling ref", async () => {
   await withScopes(async (project, userHome) => {
     const meta = writeTestSkill(userHome, "code-review");
-    runLink(project, "code-review", "user", { category: "quality" });
+    runLink(project, "code-review", { scope: "user" }, { category: "quality" });
 
     await runSkillDelete(userHome, "code-review", { force: false, convertToForks: false });
     assert.equal(process.exitCode, 1);
@@ -160,7 +160,7 @@ test("ista skill delete refuses when linked, and --force deletes leaving a dangl
 test("ista skill delete --convert-to-forks turns the linker into an independent copy first", async () => {
   await withScopes(async (project, userHome) => {
     writeTestSkill(userHome, "code-review");
-    runLink(project, "code-review", "user", { category: "quality" });
+    runLink(project, "code-review", { scope: "user" }, { category: "quality" });
 
     await runSkillDelete(userHome, "code-review", { force: false, convertToForks: true });
 
@@ -174,7 +174,7 @@ test("ista skill delete --convert-to-forks turns the linker into an independent 
 test("ista skill delete --convert-to-forks aborts (without --force) when a conversion fails", async () => {
   await withScopes(async (project, userHome) => {
     const meta = writeTestSkill(userHome, "code-review");
-    runLink(project, "code-review", "user", { category: "quality" });
+    runLink(project, "code-review", { scope: "user" }, { category: "quality" });
     // Something already occupies the name the conversion would fork into --
     // e.g. the linker separately forked this skill earlier.
     writeTestSkill(project, "code-review");

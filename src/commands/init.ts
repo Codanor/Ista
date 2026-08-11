@@ -114,13 +114,14 @@ export async function runInit(cwd: string, opts: { yes?: boolean } = {}): Promis
 
   initScope(cwd);
 
-  if (selections) {
-    const systemsConfig = Object.fromEntries(
-      Object.keys(BUILTIN_COMPILERS).map((id) => [id, { enabled: selections.systemIds.includes(id) }]),
-    );
-    writeFileSync(configPath(cwd), yaml.dump({ systems: systemsConfig }), "utf8");
-  }
+  // Non-interactive (--yes, or no TTY) enables every built-in compiler, matching
+  // the wizard's own default selection and the --yes flag's documented behavior.
+  const systemIds = selections?.systemIds ?? Object.keys(BUILTIN_COMPILERS);
+  const systemsConfig = Object.fromEntries(
+    Object.keys(BUILTIN_COMPILERS).map((id) => [id, { enabled: systemIds.includes(id) }]),
+  );
+  writeFileSync(configPath(cwd), yaml.dump({ systems: systemsConfig }), "utf8");
 
-  seedBootstrapSkills(cwd, selections?.skillDirNames ?? null, selections?.systemIds ?? null);
+  seedBootstrapSkills(cwd, selections?.skillDirNames ?? null, systemIds);
   console.log(`Initialized .ista/ in ${cwd}`);
 }

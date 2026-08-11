@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { resolve } from "node:path";
 import { Command } from "commander";
 import { runCategoryAdd, runCategoryList, runCategoryTree } from "./commands/category.ts";
 import { runFork } from "./commands/fork.ts";
@@ -16,15 +17,16 @@ import { runSkillValidate } from "./commands/skillValidate.ts";
 import { runSync } from "./commands/sync.ts";
 import { runSystemAdd, runSystemList, runSystemRemove, runSystemScaffold } from "./commands/system.ts";
 import { runUpdate } from "./commands/update.ts";
-import { ScopeSchema, type Scope } from "./schema.ts";
+import { ScopeSchema } from "./schema.ts";
+import type { ScopeLocation } from "./scope.ts";
 
-function parseScope(value: string): Scope {
+// "project"/"user"/"org" resolve the usual cwd-relative way; anything else is
+// treated as a literal path to another project's .ista/ -- the escape hatch
+// for linking/forking directly between two unrelated project trees without
+// routing through a shared org mirror.
+function parseScopeRef(value: string): ScopeLocation {
   const result = ScopeSchema.safeParse(value);
-  if (!result.success) {
-    console.error(`Invalid scope "${value}" -- must be one of: project, user, org`);
-    process.exit(1);
-  }
-  return result.data!;
+  return result.success ? { scope: result.data } : { scope: "path", path: resolve(value) };
 }
 
 const program = new Command();
@@ -118,7 +120,7 @@ program
   .description("Reference a skill from another scope without copying it")
   .option("--category <name>", "category to file the link under", "uncategorized")
   .action((skillName: string, from: string, opts: { category: string }) =>
-    runLink(process.cwd(), skillName, parseScope(from), opts),
+    runLink(process.cwd(), skillName, parseScopeRef(from), opts),
   );
 
 program
@@ -126,20 +128,20 @@ program
   .description("Relocate a skill to another scope, leaving a link back")
   .option("--category <name>", "category to file the back-link under", "uncategorized")
   .action((skillName: string, targetScope: string, opts: { category: string }) =>
-    runMove(process.cwd(), skillName, parseScope(targetScope), opts),
+    runMove(process.cwd(), skillName, parseScopeRef(targetScope), opts),
   );
 
 program
   .command("fork <skill> <from>")
   .description("Copy a skill from another scope as an independent skill with recorded lineage")
-  .action((skillName: string, from: string) => runFork(process.cwd(), skillName, parseScope(from)));
+  .action((skillName: string, from: string) => runFork(process.cwd(), skillName, parseScopeRef(from)));
 
 program
   .command("update <skill> <truth-location> <targets...>")
   .description("Propagate a truth skill's current content to its forks")
   .option("--force", "apply without confirming, even if a fork has diverged", false)
   .action((skillName: string, truthLocation: string, targets: string[], opts: { force: boolean }) =>
-    runUpdate(process.cwd(), skillName, parseScope(truthLocation), targets.map(parseScope), opts),
+    runUpdate(process.cwd(), skillName, parseScopeRef(truthLocation), targets.map(parseScopeRef), opts),
   );
 
 const category = program.command("category").description("Browse the category/index layer");

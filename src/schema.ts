@@ -8,6 +8,14 @@ export type Approval = z.infer<typeof ApprovalSchema>;
 export const ScopeSchema = z.enum(["project", "user", "org"]);
 export type Scope = z.infer<typeof ScopeSchema>;
 
+// Where a *reference* (category ref, backlink, fork lineage) points: one of
+// the three named scopes, or an arbitrary external project directory. "path"
+// is never a skill's own home scope (that's always ScopeSchema) -- it only
+// ever describes the far end of a link/fork made by pointing at another
+// project's .ista/ directly, without routing through a shared org mirror.
+export const RefScopeSchema = z.union([ScopeSchema, z.literal("path")]);
+export type RefScope = z.infer<typeof RefScopeSchema>;
+
 export const TriggerSchema = z.object({
   keywords: z.array(z.string()).default([]),
   always_on: z.boolean().default(false),
@@ -35,7 +43,8 @@ export const SystemConfigSchema = z.object({
 export type SystemConfig = z.infer<typeof SystemConfigSchema>;
 
 export const ForkedFromSchema = z.object({
-  scope: ScopeSchema,
+  scope: RefScopeSchema,
+  path: z.string().optional(), // set when scope === "path"
   id: z.string(),
   version: z.string(),
   // Hash of the fork's content at fork/update time. `ista update` (§9.5)

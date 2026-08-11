@@ -1,6 +1,6 @@
 import type { CategoryEntry } from "../category.ts";
 import { addToCategory, listCategories, readCategoryIndex } from "../category.ts";
-import { currentScope, resolveScopeRoot } from "../scope.ts";
+import { currentScope, refLabel, resolveRefRoot } from "../scope.ts";
 import { findSkillInScope } from "../store.ts";
 
 export function runCategoryAdd(cwd: string, skillName: string, categoryName: string): void {
@@ -33,11 +33,10 @@ function describeEntry(cwd: string, localRoot: string, entry: CategoryEntry): st
     const found = findSkillInScope(localRoot, entry);
     return found ? `${found.meta.name} (${found.meta.id})` : `[missing skill "${entry}"]`;
   }
-  const targetRoot = resolveScopeRoot(entry.ref.scope, cwd);
+  const targetRoot = resolveRefRoot(entry.ref, cwd);
   const found = targetRoot ? findSkillInScope(targetRoot, entry.ref.id) : null;
-  return found
-    ? `${found.meta.name} (${entry.ref.scope}:${entry.ref.id})`
-    : `[unresolved ref ${entry.ref.scope}:${entry.ref.id}]`;
+  const label = refLabel(entry.ref);
+  return found ? `${found.meta.name} (${label}:${entry.ref.id})` : `[unresolved ref ${label}:${entry.ref.id}]`;
 }
 
 export function runCategoryTree(cwd: string): void {

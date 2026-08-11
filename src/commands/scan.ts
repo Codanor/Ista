@@ -1,7 +1,7 @@
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { listCategories, readCategoryIndex } from "../category.ts";
-import { currentScope, resolveScopeRoot } from "../scope.ts";
+import { currentScope, refLabel, resolveRefRoot } from "../scope.ts";
 import { findSkillInScope, listSkills } from "../store.ts";
 import { resolveCompilers } from "./sync.ts";
 
@@ -52,10 +52,10 @@ export async function runScan(cwd: string): Promise<void> {
         }
         continue;
       }
-      const targetRoot = resolveScopeRoot(entry.ref.scope, cwd);
+      const targetRoot = resolveRefRoot(entry.ref, cwd);
       if (!targetRoot || !findSkillInScope(targetRoot, entry.ref.id)) {
         console.log(
-          `[dangling-ref] category "${categoryName}" links to ${entry.ref.scope}:${entry.ref.id}, which no longer resolves.`,
+          `[dangling-ref] category "${categoryName}" links to ${refLabel(entry.ref)}:${entry.ref.id}, which no longer resolves.`,
         );
         found++;
       }

@@ -7,6 +7,7 @@ import { join } from "node:path";
 import yaml from "js-yaml";
 import { z } from "zod";
 import { RefScopeSchema } from "./schema.ts";
+import { resolveRefRoot } from "./scope.ts";
 import { categoriesDir } from "./store.ts";
 
 const CategoryRefSchema = z.object({ ref: z.object({ scope: RefScopeSchema, path: z.string().optional(), id: z.string() }) });
@@ -52,24 +53,24 @@ export function addToCategory(root: string, name: string, entry: CategoryEntry):
 }
 
 // Used by `ista skill delete --convert-to-forks` (§9.6): swap every ref
-// entry pointing at `oldRef` for a plain same-scope id, across every
-// category in this scope, now that a real local copy exists.
-export function replaceRefInAllCategories(
-  root: string,
-  oldRef: { scope: string; id: string; path?: string },
-  newEntry: string,
-): number {
+// entry pointing at the deleted skill for a plain same-scope id, across
+// every category in `root`, now that a real local copy exists there.
+// Matches by *resolved root*, not by comparing ref.scope tags -- a ref's
+// scope tag reflects however the linker happened to reach us (their own
+// "project"/"user"/"org", or a literal "path"), which we can't reliably
+// reconstruct from our own scope's point of view; resolving each stored ref
+// and comparing against the deleted skill's actual root works uniformly.
+export function replaceRefInAllCategories(root: string, deletedSkillRoot: string, deletedSkillId: string, newEntry: string): number {
   let totalReplaced = 0;
   for (const name of listCategories(root)) {
     const entries = readCategoryIndex(root, name);
     let changedHere = false;
     const next = entries.map((e) => {
-      if (typeof e !== "string" && e.ref.scope === oldRef.scope && e.ref.id === oldRef.id && e.ref.path === oldRef.path) {
-        changedHere = true;
-        totalReplaced++;
-        return newEntry;
-      }
-      return e;
+      if (typeof e === "string" || e.ref.id !== deletedSkillId) return e;
+      if (resolveRefRoot(e.ref, root) !== deletedSkillRoot) return e;
+      changedHere = true;
+      totalReplaced++;
+      return newEntry;
     });
     if (changedHere) writeCategoryIndex(root, name, next);
   }

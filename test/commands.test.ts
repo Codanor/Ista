@@ -171,6 +171,30 @@ test("ista skill delete --convert-to-forks turns the linker into an independent 
   });
 });
 
+test("ista skill delete --convert-to-forks cleans up the ref for a path-based (cross-project) link", async () => {
+  // Regression test: a link made by literal filesystem path (not project/
+  // user/org) used to leave a dangling category ref behind after conversion,
+  // because the cleanup matched by comparing scope *tags* -- which a
+  // path-based ref never carries the same tag as the deleting scope's own.
+  await withScopes(async (project, userHome) => {
+    const externalRoot = mkdtempSync(join(tmpdir(), "ista-external-"));
+    initScope(externalRoot);
+    try {
+      writeTestSkill(externalRoot, "code-review");
+      runLink(project, "code-review", { scope: "path", path: externalRoot }, { category: "quality" });
+
+      await runSkillDelete(externalRoot, "code-review", { force: false, convertToForks: true });
+
+      assert.equal(findSkillInScope(externalRoot, "code-review"), null);
+      const forkedInProject = findSkillInScope(project, "code-review");
+      assert.ok(forkedInProject);
+      assert.deepEqual(readCategoryIndex(project, "quality"), ["code-review"]);
+    } finally {
+      rmSync(externalRoot, { recursive: true, force: true });
+    }
+  });
+});
+
 test("ista skill delete --convert-to-forks aborts (without --force) when a conversion fails", async () => {
   await withScopes(async (project, userHome) => {
     const meta = writeTestSkill(userHome, "code-review");

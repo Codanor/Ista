@@ -59,7 +59,7 @@ export async function runSkillDelete(
           allConverted = false;
           continue;
         }
-        const replaced = replaceRefInAllCategories(backlink.path, { scope, id: found.meta.id }, result.meta.name);
+        const replaced = replaceRefInAllCategories(backlink.path, root, found.meta.id, result.meta.name);
         addForkedBy(root, found.meta.id, { scope: backlink.scope, path: backlink.path, id: result.meta.id });
         removeLinkedBy(root, found.meta.id, backlink);
         console.log(`Converted link at ${backlink.path} to fork ${result.meta.id} (${replaced} category ref(s) updated).`);

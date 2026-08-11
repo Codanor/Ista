@@ -37,16 +37,25 @@ test("addToCategory writes and dedupes entries", () => {
   });
 });
 
-test("replaceRefInAllCategories swaps a cross-scope ref for a same-scope entry, only where it matches", () => {
+test("replaceRefInAllCategories swaps a resolved ref for a same-scope entry, only where it matches", () => {
   withRoot((root) => {
-    addToCategory(root, "quality", { ref: { scope: "user", id: "cr-1" } });
-    addToCategory(root, "dev-workflow", { ref: { scope: "user", id: "cr-1" } });
-    addToCategory(root, "dev-workflow", { ref: { scope: "user", id: "other" } });
+    const otherRoot = mkdtempSync(join(tmpdir(), "ista-other-"));
+    initScope(otherRoot);
+    try {
+      addToCategory(root, "quality", { ref: { scope: "path", path: otherRoot, id: "cr-1" } });
+      addToCategory(root, "dev-workflow", { ref: { scope: "path", path: otherRoot, id: "cr-1" } });
+      addToCategory(root, "dev-workflow", { ref: { scope: "path", path: otherRoot, id: "other" } });
 
-    const replaced = replaceRefInAllCategories(root, { scope: "user", id: "cr-1" }, "code-review");
-    assert.equal(replaced, 2);
-    assert.deepEqual(readCategoryIndex(root, "quality"), ["code-review"]);
-    assert.deepEqual(readCategoryIndex(root, "dev-workflow"), ["code-review", { ref: { scope: "user", id: "other" } }]);
+      const replaced = replaceRefInAllCategories(root, otherRoot, "cr-1", "code-review");
+      assert.equal(replaced, 2);
+      assert.deepEqual(readCategoryIndex(root, "quality"), ["code-review"]);
+      assert.deepEqual(readCategoryIndex(root, "dev-workflow"), [
+        "code-review",
+        { ref: { scope: "path", path: otherRoot, id: "other" } },
+      ]);
+    } finally {
+      rmSync(otherRoot, { recursive: true, force: true });
+    }
   });
 });
 

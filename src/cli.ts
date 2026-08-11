@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { createRequire } from "node:module";
 import { resolve } from "node:path";
 import { Command } from "commander";
 import { runCategoryAdd, runCategoryList, runCategoryTree } from "./commands/category.ts";
@@ -29,8 +30,11 @@ function parseScopeRef(value: string): ScopeLocation {
   return result.success ? { scope: result.data } : { scope: "path", path: resolve(value) };
 }
 
+const require = createRequire(import.meta.url);
+const pkg = require("../package.json") as { version: string };
+
 const program = new Command();
-program.name("ista").description("Cross-platform AI skill management CLI").version("0.1.0");
+program.name("ista").description("Cross-platform AI skill management CLI").version(pkg.version);
 
 program
   .command("init")
